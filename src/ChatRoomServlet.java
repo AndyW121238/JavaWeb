@@ -17,7 +17,7 @@ public class ChatRoomServlet extends HttpServlet {
         String servletPath = request.getServletPath();
 
         // 120秒无活动会退出
-        request.getSession().setMaxInactiveInterval(120);
+        request.getSession().setMaxInactiveInterval(12000);
 
         if("/ChatRoomServlet/enter".equals(servletPath)){
             doEnter(request,response);
@@ -36,24 +36,47 @@ public class ChatRoomServlet extends HttpServlet {
         ServletContext servletContext = request.getServletContext();
 
         if (servletContext.getAttribute("messages") == null) {
-            servletContext.setAttribute("messages", new ArrayList<String>());
+            servletContext.setAttribute("messages", new ArrayList<Message>());
         }
         if (servletContext.getAttribute("users") == null) {
-            servletContext.setAttribute("users", new ArrayList<String>());
+            servletContext.setAttribute("users", new ArrayList<Message>());
         }
         if(session.getAttribute("me") == null){
             session.setAttribute("me", name);
         }
+        if(session.getAttribute("filteredMessages") == null){
+            session.setAttribute("filteredMessages", new ArrayList<Message>());
+        }
 
         ArrayList<String> users = (ArrayList<String>)servletContext.getAttribute("users");
-        ArrayList<String> messages = (ArrayList<String>)servletContext.getAttribute("messages");
+        ArrayList<Message> messages = (ArrayList<Message>)servletContext.getAttribute("messages");
+        ArrayList<Message> filteredMessages = (ArrayList<Message>)session.getAttribute("filteredMessages");
 
         // 把进入聊天室的人添加到集合中
         users.add(name);
-        messages.add(name + "进入聊天室");
 
-        // 重定向到聊天室页面
-       response.sendRedirect("/cr/ChatPage.jsp");
+        String from = "system";
+        String to ="all";
+        String message  = name + "进入聊天室";
+
+        Message m = new Message(from,to,message);
+
+        messages.add(m);
+        for (int i = 0; i < messages.size(); i++) {
+            String f = messages.get(i).getFrom();
+            String t = messages.get(i).getTo();
+            if(f.equals("system")){
+                filteredMessages.add(messages.get(i));
+            }
+        }
+
+        System.out.println(name);
+        System.out.println(m.getFrom() + "to" + m.getTo());
+
+        // 转发到聊天室页面
+        RequestDispatcher requestDispatcher = request.getRequestDispatcher("/ChatPage.jsp");
+        requestDispatcher.forward(request,response);
+
     }
     public void doSend(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         // 获取用户发送的信息
@@ -67,17 +90,26 @@ public class ChatRoomServlet extends HttpServlet {
         // 获取context
         ServletContext servletContext = request.getServletContext();
 
-        System.out.println(session.getId());
         String me = (String) session.getAttribute("me");
 
         // 获取消息集合
-        ArrayList<String> messages = (ArrayList<String>) servletContext.getAttribute("messages");
+        ArrayList<Message> messages = (ArrayList<Message>) servletContext.getAttribute("messages");
 
-        messages.add(me + "对" + to + "说:" + message);
-        session.setAttribute("messages",messages);
-        System.out.println(messages);
+        String from = me;
+        String wholeMessage  = me + "对" + to + "说:" + message;
+        Message m = new Message(from,to,wholeMessage);
+        messages.add(m);
 
+        ArrayList<Message> filteredMessages = (ArrayList<Message>) session.getAttribute("filteredMessages");
+        for (int i = 0; i < messages.size(); i++) {
+            String f = messages.get(i).getFrom();
+            String t = messages.get(i).getTo();
+            if(f.equals(me) || t.equals(me)){
+                filteredMessages.add(messages.get(i));
+            }
+        }
 
-       response.sendRedirect("/cr/ChatPage.jsp");
+        RequestDispatcher requestDispatcher = request.getRequestDispatcher("/ChatPage.jsp");
+        requestDispatcher.forward(request,response);
     }
 }

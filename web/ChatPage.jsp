@@ -1,3 +1,4 @@
+<%@ page import="java.util.ArrayList" %>
 <%--
   Created by IntelliJ IDEA.
   User: AndyW
@@ -9,7 +10,6 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <html lang="en">
 <head>
-    <meta http-equiv="refresh" content="20">
     <meta charset="UTF-8">
     <title>聊天室</title>
 </head>
@@ -20,8 +20,8 @@
 </div>
 <div id="body">
     <textarea id="history" readonly>
-        <c:forEach var="message" items="${messages}">
-           ${message}
+        <c:forEach var="message" items="${sessionScope.filteredMessages}">
+           ${message.wholeMessage}
         </c:forEach>
     </textarea>
 </div>
