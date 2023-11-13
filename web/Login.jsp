@@ -20,7 +20,7 @@
         <h2>请输入昵称以进入聊天室</h2>
     </div>
     <div id="div2">
-        <form action="ChatRoomServlet/enter" method="post">
+        <form action="<%=request.getContextPath()%>/ChatRoomServlet/enter" method="post">
             <input type="text" name="name" id="name" required>
             <br>
             <input type="submit" id="enter" value="进入聊天室">

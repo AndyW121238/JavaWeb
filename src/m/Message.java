@@ -1,3 +1,5 @@
+package m;
+
 public class Message {
     private String from;
     private String to;

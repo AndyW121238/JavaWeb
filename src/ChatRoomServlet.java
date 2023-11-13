@@ -1,28 +1,25 @@
 import jakarta.servlet.*;
 import jakarta.servlet.http.*;
 import jakarta.servlet.annotation.*;
+import m.Message;
 
 import java.io.IOException;
 import java.util.ArrayList;
 
-@WebServlet(name = "ChatRoomServlet", value = {"/ChatRoomServlet/enter","/ChatRoomServlet/send"})
+@WebServlet(name = "ChatRoomServlet", value = {"/ChatRoomServlet/enter", "/ChatRoomServlet/send"})
 public class ChatRoomServlet extends HttpServlet {
-    @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-
-    }
 
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    protected void service(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String servletPath = request.getServletPath();
 
         // 120秒无活动会退出
         request.getSession().setMaxInactiveInterval(12000);
 
-        if("/ChatRoomServlet/enter".equals(servletPath)){
-            doEnter(request,response);
-        } else if ("/ChatRoomServlet/send".equals(servletPath)){
-            doSend(request,response);
+        if ("/ChatRoomServlet/enter".equals(servletPath)) {
+            doEnter(request, response);
+        } else if ("/ChatRoomServlet/send".equals(servletPath)) {
+            doSend(request, response);
         }
     }
 
@@ -41,43 +38,41 @@ public class ChatRoomServlet extends HttpServlet {
         if (servletContext.getAttribute("users") == null) {
             servletContext.setAttribute("users", new ArrayList<Message>());
         }
-        if(session.getAttribute("me") == null){
+        if (session.getAttribute("me") == null) {
             session.setAttribute("me", name);
         }
-        if(session.getAttribute("filteredMessages") == null){
+        if (session.getAttribute("filteredMessages") == null) {
             session.setAttribute("filteredMessages", new ArrayList<Message>());
         }
 
-        ArrayList<String> users = (ArrayList<String>)servletContext.getAttribute("users");
-        ArrayList<Message> messages = (ArrayList<Message>)servletContext.getAttribute("messages");
-        ArrayList<Message> filteredMessages = (ArrayList<Message>)session.getAttribute("filteredMessages");
+        ArrayList<String> users = (ArrayList<String>) servletContext.getAttribute("users");
+        ArrayList<Message> messages = (ArrayList<Message>) servletContext.getAttribute("messages");
+        ArrayList<Message> filteredMessages = (ArrayList<Message>) session.getAttribute("filteredMessages");
 
         // 把进入聊天室的人添加到集合中
         users.add(name);
 
-        String from = "system";
-        String to ="all";
-        String message  = name + "进入聊天室";
+        String from = "系统";
+        String to = "所有人";
+        String message = name + "进入聊天室";
 
-        Message m = new Message(from,to,message);
+        Message m = new Message(from, to, message);
 
         messages.add(m);
         for (int i = 0; i < messages.size(); i++) {
             String f = messages.get(i).getFrom();
             String t = messages.get(i).getTo();
-            if(f.equals("system")){
+            if (f.equals(name) || t.equals(name) || t.equals("所有人")) {
                 filteredMessages.add(messages.get(i));
             }
         }
 
-        System.out.println(name);
-        System.out.println(m.getFrom() + "to" + m.getTo());
-
         // 转发到聊天室页面
         RequestDispatcher requestDispatcher = request.getRequestDispatcher("/ChatPage.jsp");
-        requestDispatcher.forward(request,response);
+        requestDispatcher.forward(request, response);
 
     }
+
     public void doSend(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         // 获取用户发送的信息
         String message = request.getParameter("message");
@@ -96,20 +91,15 @@ public class ChatRoomServlet extends HttpServlet {
         ArrayList<Message> messages = (ArrayList<Message>) servletContext.getAttribute("messages");
 
         String from = me;
-        String wholeMessage  = me + "对" + to + "说:" + message;
-        Message m = new Message(from,to,wholeMessage);
+        String wholeMessage = me + "对" + to + "说:" + message;
+        Message m = new Message(from, to, wholeMessage);
         messages.add(m);
+        System.out.println("消息对象为:" + m + " from:" + m.getFrom() + "  to:" + m.getTo());
 
         ArrayList<Message> filteredMessages = (ArrayList<Message>) session.getAttribute("filteredMessages");
-        for (int i = 0; i < messages.size(); i++) {
-            String f = messages.get(i).getFrom();
-            String t = messages.get(i).getTo();
-            if(f.equals(me) || t.equals(me)){
-                filteredMessages.add(messages.get(i));
-            }
-        }
+        filteredMessages.add(m);
 
         RequestDispatcher requestDispatcher = request.getRequestDispatcher("/ChatPage.jsp");
-        requestDispatcher.forward(request,response);
+        requestDispatcher.forward(request, response);
     }
 }

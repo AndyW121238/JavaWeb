@@ -1,4 +1,5 @@
 <%@ page import="java.util.ArrayList" %>
+<%@ page import="m.Message" %>
 <%--
   Created by IntelliJ IDEA.
   User: AndyW
@@ -20,13 +21,23 @@
 </div>
 <div id="body">
     <textarea id="history" readonly>
-        <c:forEach var="message" items="${sessionScope.filteredMessages}">
-           ${message.wholeMessage}
-        </c:forEach>
+      <%
+          ArrayList<Message> filteredMessages = (ArrayList<Message>) request.getSession().getAttribute("filteredMessages");
+          ArrayList<Message> m = (ArrayList<Message>)request.getServletContext().getAttribute("messages") ;
+          System.out.println("所有消息集合:" + m);
+          System.out.println("session消息集合:" + filteredMessages);
+          for(Message message:filteredMessages){
+      %>
+        <%=
+                message.getWholeMessage()
+        %>
+        <%
+            }
+        %>
     </textarea>
 </div>
 <div id="footer">
-    <form action="/cr/ChatRoomServlet/send" method="post">
+    <form action="<%=request.getContextPath()%>/ChatRoomServlet/send" method="post">
         <div id="div1">
             <input type="text" name="message" id="message">
         </div>
@@ -35,9 +46,15 @@
                 发送对象:
                 <select name="to">
                     <option value="所有人">所有人</option>
-                    <c:forEach var="user" items="${users}">
-                        <option value="${user}">${user}</option>
-                    </c:forEach>
+
+                    <%
+                        ArrayList<String> users = (ArrayList<String>) request.getServletContext().getAttribute("users");
+                        for(String user:users) {
+                    %>
+                    <option value="<%=user%>"><%=user%></option>
+                    <%
+                        }
+                    %>
                 </select>
             </div>
             <input type="submit" id="send" value="发送">
