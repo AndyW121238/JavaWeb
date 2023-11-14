@@ -1,5 +1,5 @@
 <%@ page import="java.util.ArrayList" %>
-<%@ page import="m.Message" %>
+<%@ page import="Bean.Message" %>
 <%--
   Created by IntelliJ IDEA.
   User: AndyW
@@ -8,7 +8,6 @@
   To change this template use File | Settings | File Templates.
 --%>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -16,20 +15,25 @@
 </head>
 
 <body>
+<script src="./JQuery/JQuery.js"></script>
 <div id="header">
     <img src="<%=request.getContextPath()%>\logo\logo.png" alt="logo">
+    <form action="<%=request.getContextPath()%>/ChatRoomServlet/quit" method="get" id="quit">
+        <input type="submit" value="退出聊天室">
+    </form>
 </div>
 <div id="body">
     <textarea id="history" readonly>
       <%
           ArrayList<Message> filteredMessages = (ArrayList<Message>) request.getSession().getAttribute("filteredMessages");
-          ArrayList<Message> m = (ArrayList<Message>)request.getServletContext().getAttribute("messages") ;
+          ArrayList<Message> m = (ArrayList<Message>) request.getServletContext().getAttribute("messages");
           System.out.println("所有消息集合:" + m);
           System.out.println("session消息集合:" + filteredMessages);
-          for(Message message:filteredMessages){
+          System.out.println("session id:" + request.getSession().getId());
+          for (Message message : filteredMessages) {
       %>
         <%=
-                message.getWholeMessage()
+        message.getWholeMessage()
         %>
         <%
             }
@@ -49,16 +53,16 @@
 
                     <%
                         ArrayList<String> users = (ArrayList<String>) request.getServletContext().getAttribute("users");
-                        for(String user:users) {
+                        for (String user : users) {
                     %>
-                    <option value="<%=user%>"><%=user%></option>
+                    <option value="<%=user%>"><%=user%>
+                    </option>
                     <%
                         }
                     %>
                 </select>
             </div>
             <input type="submit" id="send" value="发送">
-            <input type="submit" id="quit" value="退出聊天室">
         </div>
     </form>
 </div>
@@ -75,9 +79,9 @@
     #header {
         background-color: #000;
         display: flex;
-        justify-content: center;
         align-items: center;
         margin: 0;
+        flex-direction: row;
     }
 
     #body {
@@ -140,6 +144,10 @@
         display: flex;
         flex-direction: row;
         width: 100%;
+    }
+
+    #quit {
+        flex-direction: row-reverse;
     }
 
 </style>

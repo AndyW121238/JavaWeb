@@ -1,26 +1,54 @@
-import jakarta.servlet.*;
-import jakarta.servlet.http.*;
-import jakarta.servlet.annotation.*;
-import m.Message;
+import Bean.Message;
+import jakarta.servlet.RequestDispatcher;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
 import java.util.ArrayList;
 
-@WebServlet(name = "ChatRoomServlet", value = {"/ChatRoomServlet/enter", "/ChatRoomServlet/send"})
+@WebServlet(name = "ChatRoomServlet", value = {"/ChatRoomServlet/enter", "/ChatRoomServlet/send","/ChatRoomServlet/quit"})
 public class ChatRoomServlet extends HttpServlet {
 
     @Override
     protected void service(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String servletPath = request.getServletPath();
 
-        // 120秒无活动会退出
-        request.getSession().setMaxInactiveInterval(12000);
 
         if ("/ChatRoomServlet/enter".equals(servletPath)) {
             doEnter(request, response);
         } else if ("/ChatRoomServlet/send".equals(servletPath)) {
             doSend(request, response);
+        }else if("/ChatRoomServlet/quit".equals(servletPath)){
+            doQuit(request,response);
         }
+    }
+
+
+    private void doQuit(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        // 获取session对象
+        HttpSession session = request.getSession(false);
+
+        // 获取context对象
+        ServletContext servletContext = request.getServletContext();
+
+        if(session != null){
+            String name = (String) session.getAttribute("name");
+            Message m = new Message("系统", "所有人",name + "退出聊天室");
+            ArrayList<Message> messages = (ArrayList<Message>) servletContext.getAttribute("messages");
+            // 把有人退出的消息添加到消息集合
+            messages.add(m);
+            // 手动销毁session对象
+            session.invalidate();
+            // 把当前用户从用户集合中删除
+
+        }
+        // 重定向到登陆页面
+        response.sendRedirect(request.getContextPath());
     }
 
     public void doEnter(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -29,22 +57,25 @@ public class ChatRoomServlet extends HttpServlet {
 
         // 获取session
         HttpSession session = request.getSession(false);
+
         // 获取context
         ServletContext servletContext = request.getServletContext();
 
+        // 如果各个域中没有集合的话就创建集合
         if (servletContext.getAttribute("messages") == null) {
             servletContext.setAttribute("messages", new ArrayList<Message>());
         }
         if (servletContext.getAttribute("users") == null) {
             servletContext.setAttribute("users", new ArrayList<Message>());
         }
-        if (session.getAttribute("me") == null) {
-            session.setAttribute("me", name);
+        if (session.getAttribute("name") == null) {
+            session.setAttribute("name", name);
         }
         if (session.getAttribute("filteredMessages") == null) {
             session.setAttribute("filteredMessages", new ArrayList<Message>());
         }
 
+        // 获取集合
         ArrayList<String> users = (ArrayList<String>) servletContext.getAttribute("users");
         ArrayList<Message> messages = (ArrayList<Message>) servletContext.getAttribute("messages");
         ArrayList<Message> filteredMessages = (ArrayList<Message>) session.getAttribute("filteredMessages");
@@ -56,9 +87,13 @@ public class ChatRoomServlet extends HttpServlet {
         String to = "所有人";
         String message = name + "进入聊天室";
 
+        // 创建消息对象
         Message m = new Message(from, to, message);
 
+        // 把消息对象添加到消息集合中
         messages.add(m);
+
+        // 遍历消息集合,根据信息的发出者和接收者过滤信息,并添加到session中
         for (int i = 0; i < messages.size(); i++) {
             String f = messages.get(i).getFrom();
             String t = messages.get(i).getTo();
@@ -76,6 +111,7 @@ public class ChatRoomServlet extends HttpServlet {
     public void doSend(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         // 获取用户发送的信息
         String message = request.getParameter("message");
+
         // 获取接受的人
         String to = request.getParameter("to");
 
@@ -85,13 +121,14 @@ public class ChatRoomServlet extends HttpServlet {
         // 获取context
         ServletContext servletContext = request.getServletContext();
 
-        String me = (String) session.getAttribute("me");
+        // 获取当前session的使用者
+        String name = (String) session.getAttribute("name");
 
         // 获取消息集合
         ArrayList<Message> messages = (ArrayList<Message>) servletContext.getAttribute("messages");
 
-        String from = me;
-        String wholeMessage = me + "对" + to + "说:" + message;
+        String from = name;
+        String wholeMessage = name + "对" + to + "说:" + message;
         Message m = new Message(from, to, wholeMessage);
         messages.add(m);
         System.out.println("消息对象为:" + m + " from:" + m.getFrom() + "  to:" + m.getTo());

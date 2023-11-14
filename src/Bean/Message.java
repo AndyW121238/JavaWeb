@@ -1,4 +1,4 @@
-package m;
+package Bean;
 
 public class Message {
     private String from;
