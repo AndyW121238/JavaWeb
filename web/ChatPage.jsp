@@ -10,12 +10,12 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <html lang="en">
 <head>
+    <meta http-equiv="refresh" content="5">
     <meta charset="UTF-8">
     <title>聊天室</title>
 </head>
 
 <body>
-<script src="./JQuery/JQuery.js"></script>
 <div id="header">
     <img src="<%=request.getContextPath()%>\logo\logo.png" alt="logo">
     <form action="<%=request.getContextPath()%>/ChatRoomServlet/quit" method="get" id="quit">
@@ -27,9 +27,10 @@
       <%
           ArrayList<Message> filteredMessages = (ArrayList<Message>) request.getSession().getAttribute("filteredMessages");
           ArrayList<Message> m = (ArrayList<Message>) request.getServletContext().getAttribute("messages");
+          String name = (String) request.getSession().getAttribute("name");
           System.out.println("所有消息集合:" + m);
-          System.out.println("session消息集合:" + filteredMessages);
-          System.out.println("session id:" + request.getSession().getId());
+          System.out.println(name + "的session消息集合:" + filteredMessages);
+          System.out.println(name + "的session id:" + request.getSession().getId());
           for (Message message : filteredMessages) {
       %>
         <%=
@@ -39,11 +40,25 @@
             }
         %>
     </textarea>
+
+    <textarea id="users" readonly>
+    <%
+        ArrayList<String> users = (ArrayList<String>) request.getServletContext().getAttribute("users");
+        System.out.println(users);
+        for (String user : users) {
+    %>
+      <%=
+      user
+      %>
+    <%
+        }
+    %>
+    </textarea>
 </div>
 <div id="footer">
     <form action="<%=request.getContextPath()%>/ChatRoomServlet/send" method="post">
         <div id="div1">
-            <input type="text" name="message" id="message">
+            <input type="text" name="message" id="message" required>
         </div>
         <div id="div2">
             <div>
@@ -52,7 +67,6 @@
                     <option value="所有人">所有人</option>
 
                     <%
-                        ArrayList<String> users = (ArrayList<String>) request.getServletContext().getAttribute("users");
                         for (String user : users) {
                     %>
                     <option value="<%=user%>"><%=user%>
@@ -87,6 +101,8 @@
     #body {
         background-color: #fff;
         height: 85%;
+        display: flex;
+        flex-direction: row;
     }
 
     #footer {
@@ -99,9 +115,21 @@
         border: 0;
         resize: none;
         height: 100%;
-        width: 100%;
+        width: 75%;
         padding: 0;
         background-color: #0e0e0e;
+        outline: none;
+        color: white;
+        text-align: left;
+    }
+
+    #users {
+        border: 0;
+        resize: none;
+        height: 100%;
+        width: 25%;
+        padding: 0;
+        background-color: #282828;
         outline: none;
         color: white;
         text-align: left;
